@@ -1,84 +1,110 @@
-/**
+﻿/**
  * Welcome/Signup Screen - First screen users see
  */
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Button, DisclaimerModal } from '@/components/common';
-import { Colors, Spacing, FontSize, FontWeight } from '@/constants';
-import { useUserStore, useSettingsStore } from '@/store';
+import { Button, DisclaimerModal } from "@/components/common";
+import { Colors, FontSize, FontWeight, Spacing } from "@/constants";
+import { useSettingsStore, useUserStore } from "@/store";
+import { Ionicons } from "@expo/vector-icons";
+import { Redirect, useRootNavigationState, useRouter } from "expo-router";
+import React, { useState } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function WelcomeScreen() {
+  const { width, height } = useWindowDimensions();
   const router = useRouter();
-  const { user, isAuthenticated } = useUserStore();
+  const rootNavigationState = useRootNavigationState();
+  const { user, isAuthenticated, isLoading } = useUserStore();
   const { disclaimerAccepted, acceptDisclaimer } = useSettingsStore();
   const [showDisclaimer, setShowDisclaimer] = useState(false);
-
-  useEffect(() => {
-    // If already authenticated, redirect to main app
-    if (isAuthenticated && user) {
-      router.replace('/(tabs)');
-    }
-  }, [isAuthenticated, user]);
+  const isSmallScreen = width < 380 || height < 740;
 
   const handleGetStarted = () => {
+    if (isLoading) return;
     if (!disclaimerAccepted) {
       setShowDisclaimer(true);
     } else {
-      router.push('/(auth)/profile-setup');
+      router.push("/(auth)/profile-setup");
     }
   };
 
   const handleAcceptDisclaimer = () => {
     acceptDisclaimer();
     setShowDisclaimer(false);
-    router.push('/(auth)/profile-setup');
+    router.push("/(auth)/profile-setup");
   };
 
+  if (isLoading) {
+    return <SafeAreaView style={styles.container} />;
+  }
+
+  if (rootNavigationState?.key && isAuthenticated && user) {
+    return <Redirect href="/(tabs)" />;
+  }
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.logo}>🌾</Text>
-        <Text style={styles.title}>Rice Quality</Text>
-        <Text style={styles.subtitle}>Analyzer</Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          isSmallScreen && styles.scrollContentSmall,
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.header}>
+          <Text style={styles.logo}>🌾</Text>
+          <Text style={[styles.title, isSmallScreen && styles.titleSmall]}>
+            Rice Quality
+          </Text>
+          <Text
+            style={[styles.subtitle, isSmallScreen && styles.subtitleSmall]}
+          >
+            Analyzer
+          </Text>
+        </View>
 
-      <View style={styles.features}>
-        <FeatureItem
-          icon="📸"
-          title="Capture"
-          description="Take a photo of your rice sample"
-        />
-        <FeatureItem
-          icon="🤖"
-          title="Analyze"
-          description="AI analyzes grain quality instantly"
-        />
-        <FeatureItem
-          icon="📊"
-          title="Results"
-          description="Get detailed quality metrics"
-        />
-      </View>
+        <View style={styles.features}>
+          <FeatureItem
+            icon="camera-outline"
+            title="Capture"
+            description="Take a photo of your rice sample"
+          />
+          <FeatureItem
+            icon="analytics-outline"
+            title="Analyze"
+            description="AI analyzes grain quality instantly"
+          />
+          <FeatureItem
+            icon="stats-chart-outline"
+            title="Results"
+            description="Get detailed quality metrics"
+          />
+        </View>
 
-      <View style={styles.footer}>
-        <Button
-          title="Get Started"
-          onPress={handleGetStarted}
-          fullWidth
-          size="lg"
-        />
-        <Text style={styles.footerText}>
-          Powered by UNIDO & AfricaRice
-        </Text>
-      </View>
+        <View style={styles.footer}>
+          <Button
+            title="Get Started"
+            onPress={handleGetStarted}
+            fullWidth
+            size="lg"
+          />
+          <Text style={styles.footerText}>Powered by UNIDO & AfricaRice</Text>
+        </View>
+      </ScrollView>
 
       <DisclaimerModal
         visible={showDisclaimer}
         onAccept={handleAcceptDisclaimer}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -87,13 +113,15 @@ function FeatureItem({
   title,
   description,
 }: {
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
   title: string;
   description: string;
 }) {
   return (
     <View style={styles.featureItem}>
-      <Text style={styles.featureIcon}>{icon}</Text>
+      <View style={styles.featureIconContainer}>
+        <Ionicons name={icon} size={24} color={Colors.light.primary} />
+      </View>
       <View style={styles.featureText}>
         <Text style={styles.featureTitle}>{title}</Text>
         <Text style={styles.featureDescription}>{description}</Text>
@@ -106,38 +134,60 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: 100,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: Spacing.xxl,
   },
   logo: {
     fontSize: 80,
     marginBottom: Spacing.md,
   },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.xl,
+  },
+  scrollContentSmall: {
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.lg,
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: Spacing.xl,
+    marginTop: Spacing.md,
+  },
   title: {
     fontSize: 32,
     fontWeight: FontWeight.bold,
     color: Colors.light.primary,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xs,
   },
   subtitle: {
     fontSize: 32,
     fontWeight: FontWeight.bold,
     color: Colors.light.text,
   },
+  titleSmall: {
+    fontSize: 28,
+  },
+  subtitleSmall: {
+    fontSize: 28,
+  },
   features: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.lg,
   },
-  featureIcon: {
-    fontSize: 40,
+  featureIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.light.backgroundSecondary,
     marginRight: Spacing.md,
   },
   featureText: {
@@ -154,10 +204,11 @@ const styles = StyleSheet.create({
     color: Colors.light.textSecondary,
   },
   footer: {
-    paddingBottom: Spacing.xxl,
+    marginTop: "auto",
+    paddingTop: Spacing.lg,
   },
   footerText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: Spacing.md,
     fontSize: FontSize.sm,
     color: Colors.light.textMuted,

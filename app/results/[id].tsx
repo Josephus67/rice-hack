@@ -5,7 +5,8 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Button } from '@/components/common';
 import {
@@ -34,10 +35,12 @@ export default function ResultsScreen() {
 
   if (!scan) {
     return (
-      <View style={styles.notFoundContainer}>
-        <Text style={styles.notFoundText}>Scan not found</Text>
-        <Button title="Go Home" onPress={() => router.replace('/(tabs)')} />
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.notFoundContainer}>
+          <Text style={styles.notFoundText}>Scan not found</Text>
+          <Button title="Go Home" onPress={() => router.replace('/(tabs)')} />
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -45,13 +48,7 @@ export default function ResultsScreen() {
   const brokenPercent = (rawOutput.broken_count / rawOutput.count) * 100;
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          title: 'Analysis Results',
-          headerBackTitle: 'Back',
-        }}
-      />
+    <SafeAreaView style={styles.container}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {/* Grade Indicator */}
         <GradeIndicator
@@ -192,7 +189,7 @@ export default function ResultsScreen() {
           />
         </View>
       </ScrollView>
-    </>
+    </SafeAreaView>
   );
 }
 

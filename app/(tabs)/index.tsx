@@ -2,15 +2,29 @@
  * Home Screen - Main dashboard
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Card, Button } from '@/components/common';
-import { Colors, Spacing, FontSize, FontWeight, BorderRadius, Shadows } from '@/constants';
-import { useUserStore, useScansStore } from '@/store';
-import { formatDate, formatPercentage } from '@/utils/formatters';
-import type { ScanSummary } from '@/types';
+import { Card } from "@/components/common";
+import {
+  BorderRadius,
+  Colors,
+  FontSize,
+  FontWeight,
+  Shadows,
+  Spacing,
+} from "@/constants";
+import { useScansStore, useUserStore } from "@/store";
+import type { ScanSummary } from "@/types";
+import { formatDate } from "@/utils/formatters";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -18,7 +32,7 @@ export default function HomeScreen() {
   const { recentScans } = useScansStore();
 
   const handleNewScan = () => {
-    router.push('/capture');
+    router.push("/capture");
   };
 
   const handleViewScan = (id: string) => {
@@ -26,15 +40,14 @@ export default function HomeScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Welcome section */}
       <View style={styles.welcomeSection}>
         <Text style={styles.welcomeText}>
-          Welcome{user?.username ? `, ${user.username}` : ''}!
+          Welcome{user?.username ? `, ${user.username}` : ""}!
         </Text>
-        <Text style={styles.subtitleText}>
-          Analyze rice quality with AI
-        </Text>
+        <Text style={styles.subtitleText}>Analyze rice quality with AI</Text>
       </View>
 
       {/* New Scan Button */}
@@ -52,7 +65,11 @@ export default function HomeScreen() {
             Capture and analyze a rice sample
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={24} color={Colors.light.primaryText} />
+        <Ionicons
+          name="chevron-forward"
+          size={24}
+          color={Colors.light.primaryText}
+        />
       </TouchableOpacity>
 
       {/* Quick Stats */}
@@ -63,7 +80,11 @@ export default function HomeScreen() {
         </Card>
         <Card variant="outlined" style={styles.statCard}>
           <Text style={styles.statValue}>
-            {recentScans.filter(s => s.gradeCode === 'P' || s.gradeCode === '1').length}
+            {
+              recentScans.filter(
+                (s) => s.gradeCode === "P" || s.gradeCode === "1",
+              ).length
+            }
           </Text>
           <Text style={styles.statLabel}>Premium/Grade 1</Text>
         </Card>
@@ -74,7 +95,7 @@ export default function HomeScreen() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Recent Scans</Text>
           {recentScans.length > 0 && (
-            <TouchableOpacity onPress={() => router.push('/(tabs)/history')}>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/history")}>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
           )}
@@ -82,20 +103,26 @@ export default function HomeScreen() {
 
         {recentScans.length === 0 ? (
           <Card variant="filled" style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>📊</Text>
+            <Ionicons
+              name="stats-chart"
+              size={FontSize.xxxl * 2}
+              color={Colors.primary}
+            />
             <Text style={styles.emptyText}>No scans yet</Text>
             <Text style={styles.emptySubtext}>
-              Tap "New Scan" to analyze your first rice sample
+              Tap &quot;New Scan&quot; to analyze your first rice sample
             </Text>
           </Card>
         ) : (
-          recentScans.slice(0, 3).map((scan) => (
-            <RecentScanCard
-              key={scan.id}
-              scan={scan}
-              onPress={() => handleViewScan(scan.id)}
-            />
-          ))
+          recentScans
+            .slice(0, 3)
+            .map((scan) => (
+              <RecentScanCard
+                key={scan.id}
+                scan={scan}
+                onPress={() => handleViewScan(scan.id)}
+              />
+            ))
         )}
       </View>
 
@@ -110,7 +137,8 @@ export default function HomeScreen() {
           overlapping for most accurate analysis.
         </Text>
       </Card>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -143,7 +171,11 @@ function RecentScanCard({
             <Text style={styles.scanStatValue}>{scan.totalCount}</Text>
             <Text style={styles.scanStatLabel}>grains</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color={Colors.light.textMuted} />
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={Colors.light.textMuted}
+          />
         </View>
       </Card>
     </TouchableOpacity>
@@ -152,13 +184,13 @@ function RecentScanCard({
 
 function getGradeColor(code: string): string {
   switch (code) {
-    case 'P':
+    case "P":
       return Colors.light.premium;
-    case '1':
+    case "1":
       return Colors.light.grade1;
-    case '2':
+    case "2":
       return Colors.light.grade2;
-    case '3':
+    case "3":
       return Colors.light.grade3;
     default:
       return Colors.light.belowGrade;
@@ -188,8 +220,8 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   newScanButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: Colors.light.primary,
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
@@ -200,9 +232,9 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: Spacing.md,
   },
   newScanTextContainer: {
@@ -215,17 +247,17 @@ const styles = StyleSheet.create({
   },
   newScanSubtitle: {
     fontSize: FontSize.sm,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: "rgba(255, 255, 255, 0.8)",
     marginTop: 2,
   },
   statsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: Spacing.md,
     marginBottom: Spacing.lg,
   },
   statCard: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: Spacing.md,
   },
   statValue: {
@@ -242,9 +274,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: Spacing.md,
   },
   sectionTitle: {
@@ -258,7 +290,7 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.medium,
   },
   emptyCard: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: Spacing.xl,
   },
   emptyIcon: {
@@ -273,22 +305,22 @@ const styles = StyleSheet.create({
   emptySubtext: {
     fontSize: FontSize.sm,
     color: Colors.light.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: Spacing.xs,
   },
   scanCard: {
     marginBottom: Spacing.sm,
   },
   scanCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   gradeBadge: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: Spacing.md,
   },
   gradeText: {
@@ -310,7 +342,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   scanStats: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
     marginRight: Spacing.sm,
   },
   scanStatValue: {
@@ -326,8 +358,8 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   tipsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: Spacing.sm,
   },
   tipsTitle: {

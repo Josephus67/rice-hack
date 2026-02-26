@@ -2,38 +2,50 @@
  * Capture Screen - Camera view for taking rice sample photos
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import { Button, LoadingOverlay } from "@/components/common";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
+  BorderRadius,
+  Colors,
+  FontSize,
+  FontWeight,
+  Spacing,
+} from "@/constants";
+import { useCaptureStore } from "@/store";
+import type { RiceType } from "@/types";
+import { Ionicons } from "@expo/vector-icons";
+import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
+import { useRouter } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import {
   Alert,
   Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { Ionicons } from '@expo/vector-icons';
-import { Select, Button, LoadingOverlay } from '@/components/common';
-import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '@/constants';
-import { useCaptureStore } from '@/store';
-import type { RiceType } from '@/types';
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const RICE_TYPE_OPTIONS = [
-  { label: 'Paddy Rice', value: 'Paddy' as RiceType },
-  { label: 'Brown Rice', value: 'Brown' as RiceType },
-  { label: 'White Rice', value: 'White' as RiceType },
+  { label: "Paddy Rice", value: "Paddy" as RiceType },
+  { label: "Brown Rice", value: "Brown" as RiceType },
+  { label: "White Rice", value: "White" as RiceType },
 ];
 
 export default function CaptureScreen() {
   const router = useRouter();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
-  const [facing, setFacing] = useState<CameraType>('back');
+  const [facing, setFacing] = useState<CameraType>("back");
   const [isCapturing, setIsCapturing] = useState(false);
   const [showRiceTypeSelect, setShowRiceTypeSelect] = useState(false);
 
-  const { selectedRiceType, setRiceType, setImageUri, isCapturing: storeCapturing } = useCaptureStore();
+  const {
+    selectedRiceType,
+    setRiceType,
+    setImageUri,
+    isCapturing: storeCapturing,
+  } = useCaptureStore();
 
   useEffect(() => {
     if (!permission?.granted && permission?.canAskAgain) {
@@ -54,11 +66,11 @@ export default function CaptureScreen() {
 
       if (photo?.uri) {
         setImageUri(photo.uri);
-        router.push('/capture/preview');
+        router.push("/capture/preview");
       }
     } catch (error) {
-      console.error('Error capturing photo:', error);
-      Alert.alert('Error', 'Failed to capture photo. Please try again.');
+      console.error("Error capturing photo:", error);
+      Alert.alert("Error", "Failed to capture photo. Please try again.");
     } finally {
       setIsCapturing(false);
     }
@@ -69,14 +81,18 @@ export default function CaptureScreen() {
   };
 
   const toggleCameraFacing = () => {
-    setFacing((current) => (current === 'back' ? 'front' : 'back'));
+    setFacing((current) => (current === "back" ? "front" : "back"));
   };
 
   // Permission not granted
   if (!permission?.granted) {
     return (
-      <View style={styles.permissionContainer}>
-        <Ionicons name="camera-outline" size={64} color={Colors.light.textMuted} />
+      <SafeAreaView style={styles.permissionContainer}>
+        <Ionicons
+          name="camera-outline"
+          size={64}
+          color={Colors.light.textMuted}
+        />
         <Text style={styles.permissionTitle}>Camera Permission Required</Text>
         <Text style={styles.permissionText}>
           We need camera access to capture rice sample photos for analysis.
@@ -92,18 +108,14 @@ export default function CaptureScreen() {
           onPress={handleClose}
           style={{ marginTop: Spacing.sm }}
         />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Camera View */}
-      <CameraView
-        ref={cameraRef}
-        style={styles.camera}
-        facing={facing}
-      >
+      <CameraView ref={cameraRef} style={styles.camera} facing={facing}>
         {/* Top Controls */}
         <View style={styles.topControls}>
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -116,11 +128,22 @@ export default function CaptureScreen() {
           >
             <Ionicons name="leaf" size={18} color={Colors.light.primaryText} />
             <Text style={styles.riceTypeText}>{selectedRiceType}</Text>
-            <Ionicons name="chevron-down" size={16} color={Colors.light.primaryText} />
+            <Ionicons
+              name="chevron-down"
+              size={16}
+              color={Colors.light.primaryText}
+            />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={toggleCameraFacing} style={styles.flipButton}>
-            <Ionicons name="camera-reverse" size={24} color={Colors.light.primaryText} />
+          <TouchableOpacity
+            onPress={toggleCameraFacing}
+            style={styles.flipButton}
+          >
+            <Ionicons
+              name="camera-reverse"
+              size={24}
+              color={Colors.light.primaryText}
+            />
           </TouchableOpacity>
         </View>
 
@@ -133,7 +156,7 @@ export default function CaptureScreen() {
             <View style={[styles.corner, styles.bottomLeft]} />
             <View style={[styles.corner, styles.bottomRight]} />
           </View>
-          
+
           <Text style={styles.guidanceText}>
             Place rice sample within the frame
           </Text>
@@ -148,7 +171,11 @@ export default function CaptureScreen() {
               <Text style={styles.tipText}>Good lighting</Text>
             </View>
             <View style={styles.tipItem}>
-              <Ionicons name="color-palette" size={16} color={Colors.light.info} />
+              <Ionicons
+                name="color-palette"
+                size={16}
+                color={Colors.light.info}
+              />
               <Text style={styles.tipText}>Blue background</Text>
             </View>
             <View style={styles.tipItem}>
@@ -181,7 +208,8 @@ export default function CaptureScreen() {
                 key={option.value}
                 style={[
                   styles.riceOption,
-                  selectedRiceType === option.value && styles.riceOptionSelected,
+                  selectedRiceType === option.value &&
+                    styles.riceOptionSelected,
                 ]}
                 onPress={() => {
                   setRiceType(option.value);
@@ -191,13 +219,18 @@ export default function CaptureScreen() {
                 <Text
                   style={[
                     styles.riceOptionText,
-                    selectedRiceType === option.value && styles.riceOptionTextSelected,
+                    selectedRiceType === option.value &&
+                      styles.riceOptionTextSelected,
                   ]}
                 >
                   {option.label}
                 </Text>
                 {selectedRiceType === option.value && (
-                  <Ionicons name="checkmark" size={20} color={Colors.light.primary} />
+                  <Ionicons
+                    name="checkmark"
+                    size={20}
+                    color={Colors.light.primary}
+                  />
                 )}
               </TouchableOpacity>
             ))}
@@ -212,7 +245,7 @@ export default function CaptureScreen() {
       )}
 
       <LoadingOverlay visible={isCapturing} message="Capturing..." />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -226,8 +259,8 @@ const styles = StyleSheet.create({
   },
   permissionContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: Colors.light.background,
     padding: Spacing.xl,
   },
@@ -236,33 +269,33 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.bold,
     color: Colors.light.text,
     marginTop: Spacing.lg,
-    textAlign: 'center',
+    textAlign: "center",
   },
   permissionText: {
     fontSize: FontSize.md,
     color: Colors.light.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: Spacing.sm,
   },
   topControls: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: Platform.OS === "ios" ? 60 : 40,
     paddingHorizontal: Spacing.md,
   },
   closeButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   riceTypeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.round,
@@ -277,22 +310,22 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   guidanceContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   guidanceFrame: {
     width: 280,
     height: 280,
-    position: 'relative',
+    position: "relative",
   },
   corner: {
-    position: 'absolute',
+    position: "absolute",
     width: 40,
     height: 40,
     borderColor: Colors.light.primaryText,
@@ -331,34 +364,45 @@ const styles = StyleSheet.create({
     color: Colors.light.primaryText,
     fontSize: FontSize.md,
     fontWeight: FontWeight.medium,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
   bottomControls: {
-    paddingBottom: Platform.OS === 'ios' ? 40 : 30,
+    paddingBottom: Platform.OS === "ios" ? 40 : 30,
     paddingHorizontal: Spacing.md,
   },
   tipsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: Spacing.lg,
+    // borderColor: "red",
+    // borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
     marginBottom: Spacing.lg,
+    paddingHorizontal: Spacing.sm,
+    width: "100%",
   },
   tipItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.round,
+    backgroundColor: "rgba(0, 0, 0, 0.35)",
   },
   tipText: {
     color: Colors.light.primaryText,
     fontSize: FontSize.sm,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    flexShrink: 1,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
   captureButtonContainer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   captureButton: {
     width: 72,
@@ -375,29 +419,29 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
     padding: Spacing.lg,
   },
   modalContent: {
     backgroundColor: Colors.light.card,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
-    width: '100%',
+    width: "100%",
     maxWidth: 320,
   },
   modalTitle: {
     fontSize: FontSize.lg,
     fontWeight: FontWeight.bold,
     color: Colors.light.text,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: Spacing.md,
   },
   riceOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
     marginBottom: Spacing.xs,

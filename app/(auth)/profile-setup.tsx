@@ -1,15 +1,17 @@
-/**
+﻿/**
  * Profile Setup Screen
  */
 
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Button, Input, Select, Card } from '@/components/common';
-import { Colors, Spacing, FontSize, FontWeight } from '@/constants';
+import { BorderRadius, Colors, FontSize, FontWeight, Shadows, Spacing } from '@/constants';
 import { useUserStore } from '@/store';
 import { generateUUID } from '@/utils/uuid';
-import type { UserRole, CreateUserInput } from '@/types';
+import type { UserRole } from '@/types';
 
 const ROLE_OPTIONS: { label: string; value: UserRole }[] = [
   { label: 'Rice Buyer', value: 'Buyer' },
@@ -65,61 +67,65 @@ export default function ProfileSetupScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.header}>
-          <Text style={styles.icon}>👤</Text>
-          <Text style={styles.title}>Set Up Your Profile</Text>
-          <Text style={styles.subtitle}>
-            This helps us personalize your experience
-          </Text>
-        </View>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+          <View style={styles.header}>
+            <View style={styles.heroIconBadge}>
+              <Ionicons name="person-circle-outline" size={42} color={Colors.light.primary} />
+            </View>
+            <Text style={styles.kicker}>Welcome</Text>
+            <Text style={styles.title}>Set Up Your Profile</Text>
+            <Text style={styles.subtitle}>
+              This helps us personalize your experience
+            </Text>
+          </View>
 
-        <Card variant="filled" style={styles.form}>
-          <Input
-            label="Your Name"
-            placeholder="Enter your name"
-            value={username}
-            onChangeText={setUsername}
-            error={errors.username}
-            autoCapitalize="words"
-            autoCorrect={false}
-          />
+          <Card variant="elevated" style={styles.form}>
+            <Input
+              label="Your Name"
+              placeholder="Enter your name"
+              value={username}
+              onChangeText={setUsername}
+              error={errors.username}
+              autoCapitalize="words"
+              autoCorrect={false}
+            />
 
-          <Select
-            label="Your Role"
-            placeholder="Select your role"
-            value={role}
-            options={ROLE_OPTIONS}
-            onChange={setRole}
-            error={errors.role}
-          />
+            <Select
+              label="Your Role"
+              placeholder="Select your role"
+              value={role}
+              options={ROLE_OPTIONS}
+              onChange={setRole}
+              error={errors.role}
+            />
 
-          <Input
-            label="Organization (Optional)"
-            placeholder="Company or organization name"
-            value={organization}
-            onChangeText={setOrganization}
-            autoCapitalize="words"
-          />
-        </Card>
+            <Input
+              label="Organization (Optional)"
+              placeholder="Company or organization name"
+              value={organization}
+              onChangeText={setOrganization}
+              autoCapitalize="words"
+            />
+          </Card>
 
-        <View style={styles.footer}>
-          <Button
-            title="Continue"
-            onPress={handleSubmit}
-            fullWidth
-            size="lg"
-          />
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <View style={styles.footer}>
+            <Button
+              title="Continue"
+              onPress={handleSubmit}
+              fullWidth
+              size="lg"
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -131,15 +137,31 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: Spacing.lg,
-    paddingTop: 80,
+    paddingTop: Spacing.xl,
   },
   header: {
     alignItems: 'center',
+    marginTop: Spacing.sm,
     marginBottom: Spacing.xl,
   },
-  icon: {
-    fontSize: 64,
+  heroIconBadge: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: Colors.light.backgroundSecondary,
+    borderWidth: 2,
+    borderColor: '#DCECD6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.sm,
+  },
+  kicker: {
+    marginTop: Spacing.md,
     marginBottom: Spacing.md,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    color: Colors.light.primary,
+    letterSpacing: 0.3,
   },
   title: {
     fontSize: FontSize.xxl,
@@ -153,10 +175,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   form: {
+    borderRadius: BorderRadius.lg,
     marginBottom: Spacing.xl,
   },
   footer: {
     marginTop: 'auto',
-    paddingBottom: Spacing.xl,
+    paddingBottom: Spacing.lg,
   },
 });

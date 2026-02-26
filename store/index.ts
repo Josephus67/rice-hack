@@ -41,6 +41,13 @@ export const useUserStore = create<UserState>()(
       name: 'user-storage',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          console.error('Failed to rehydrate user store:', error);
+        }
+        // Mark hydration complete so auth redirects happen only after persisted state is ready.
+        useUserStore.setState({ isLoading: false });
+      },
     }
   )
 );

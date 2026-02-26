@@ -2,23 +2,24 @@
  * History Tab - List of past scans with pagination and swipe-to-delete
  */
 
-import React, { useCallback } from 'react';
+import { Button, Card, SwipeableRow } from "@/components/common";
+import { Colors, FontSize, FontWeight, Spacing } from "@/constants";
+import { useScans } from "@/hooks/use-scans";
+import type { ScanSummary } from "@/types";
+import { formatDate, formatPercentage } from "@/utils/formatters";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React, { useCallback } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
   ActivityIndicator,
   Alert,
+  FlatList,
   RefreshControl,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Card, Button, SwipeableRow } from '@/components/common';
-import { GradeIndicator } from '@/components/results';
-import { Colors, Spacing, FontSize, FontWeight } from '@/constants';
-import { useScans } from '@/hooks/use-scans';
-import { formatDate, formatPercentage } from '@/utils/formatters';
-import type { ScanSummary } from '@/types';
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 export default function HistoryScreen() {
   const router = useRouter();
@@ -33,63 +34,73 @@ export default function HistoryScreen() {
     deleteScan,
   } = useScans();
 
-  const handleDelete = useCallback(async (id: string) => {
-    Alert.alert(
-      'Delete Scan',
-      'Are you sure you want to delete this scan? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteScan(id);
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete scan');
-            }
+  const handleDelete = useCallback(
+    async (id: string) => {
+      Alert.alert(
+        "Delete Scan",
+        "Are you sure you want to delete this scan? This action cannot be undone.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await deleteScan(id);
+              } catch (error) {
+                Alert.alert("Error", "Failed to delete scan");
+              }
+            },
           },
-        },
-      ]
-    );
-  }, [deleteScan]);
+        ],
+      );
+    },
+    [deleteScan],
+  );
 
-  const renderScanItem = useCallback(({ item }: { item: ScanSummary }) => (
-    <SwipeableRow onDelete={() => handleDelete(item.id)}>
-      <Card variant="elevated" style={styles.scanCard}>
-        <View style={styles.scanHeader}>
-          <View
-            style={[
-              styles.gradeBadge,
-              { backgroundColor: getGradeColor(item.gradeCode) },
-            ]}
-          >
-            <Text style={styles.gradeText}>{item.gradeCode}</Text>
+  const renderScanItem = useCallback(
+    ({ item }: { item: ScanSummary }) => (
+      <SwipeableRow onDelete={() => handleDelete(item.id)}>
+        <Card variant="elevated" style={styles.scanCard}>
+          <View style={styles.scanHeader}>
+            <View
+              style={[
+                styles.gradeBadge,
+                { backgroundColor: getGradeColor(item.gradeCode) },
+              ]}
+            >
+              <Text style={styles.gradeText}>{item.gradeCode}</Text>
+            </View>
+            <View style={styles.headerInfo}>
+              <Text style={styles.riceType}>{item.riceType}</Text>
+              <Text style={styles.date}>
+                {formatDate(new Date(item.capturedAt))}
+              </Text>
+            </View>
           </View>
-          <View style={styles.headerInfo}>
-            <Text style={styles.riceType}>{item.riceType}</Text>
-            <Text style={styles.date}>{formatDate(new Date(item.capturedAt))}</Text>
+          <View style={styles.scanStats}>
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>{item.totalCount}</Text>
+              <Text style={styles.statLabel}>Grains</Text>
+            </View>
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>
+                {formatPercentage(item.brokenPercent)}
+              </Text>
+              <Text style={styles.statLabel}>Broken</Text>
+            </View>
           </View>
-        </View>
-        <View style={styles.scanStats}>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>{item.totalCount}</Text>
-            <Text style={styles.statLabel}>Grains</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>{formatPercentage(item.brokenPercent)}</Text>
-            <Text style={styles.statLabel}>Broken</Text>
-          </View>
-        </View>
-        <Button
-          title="View Details"
-          variant="ghost"
-          size="sm"
-          onPress={() => router.push(`/results/${item.id}`)}
-        />
-      </Card>
-    </SwipeableRow>
-  ), [handleDelete, router]);
+          <Button
+            title="View Details"
+            variant="ghost"
+            size="sm"
+            onPress={() => router.push(`/results/${item.id}`)}
+          />
+        </Card>
+      </SwipeableRow>
+    ),
+    [handleDelete, router],
+  );
 
   const ListFooter = () => {
     if (!hasMore) return null;
@@ -104,21 +115,25 @@ export default function HistoryScreen() {
     <View style={styles.header}>
       <Text style={styles.headerTitle}>Scan History</Text>
       <Text style={styles.headerSubtitle}>
-        {totalCount} {totalCount === 1 ? 'scan' : 'scans'}
+        {totalCount} {totalCount === 1 ? "scan" : "scans"}
       </Text>
     </View>
   );
 
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>📊</Text>
+      <Ionicons
+        name="stats-chart"
+        size={FontSize.xxxl * 2}
+        color={Colors.primary}
+      />
       <Text style={styles.emptyTitle}>No Scans Yet</Text>
       <Text style={styles.emptyDescription}>
         Start by capturing a rice sample from the Home screen
       </Text>
       <Button
         title="Start Scanning"
-        onPress={() => router.push('/capture')}
+        onPress={() => router.push("/capture")}
         style={{ marginTop: Spacing.lg }}
       />
     </View>
@@ -126,15 +141,17 @@ export default function HistoryScreen() {
 
   if (isLoading && scans.length === 0) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.light.primary} />
-        <Text style={styles.loadingText}>Loading scans...</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.light.primary} />
+          <Text style={styles.loadingText}>Loading scans...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {scans.length === 0 ? (
         <EmptyState />
       ) : (
@@ -158,19 +175,19 @@ export default function HistoryScreen() {
           }
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
 function getGradeColor(code: string): string {
   switch (code) {
-    case 'P':
+    case "P":
       return Colors.light.premium;
-    case '1':
+    case "1":
       return Colors.light.grade1;
-    case '2':
+    case "2":
       return Colors.light.grade2;
-    case '3':
+    case "3":
       return Colors.light.grade3;
     default:
       return Colors.light.belowGrade;
@@ -189,16 +206,16 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   scanHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: Spacing.sm,
   },
   gradeBadge: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: Spacing.sm,
   },
   gradeText: {
@@ -217,7 +234,7 @@ const styles = StyleSheet.create({
     color: Colors.light.textSecondary,
   },
   scanStats: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginVertical: Spacing.sm,
   },
   stat: {
@@ -234,8 +251,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     marginTop: Spacing.md,
@@ -260,12 +277,12 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: Spacing.xl,
   },
   emptyIcon: {
@@ -281,6 +298,6 @@ const styles = StyleSheet.create({
   emptyDescription: {
     fontSize: FontSize.md,
     color: Colors.light.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

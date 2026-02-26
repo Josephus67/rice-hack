@@ -6,11 +6,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, Alert, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Card, LoadingOverlay } from '@/components/common';
 import { Colors, Spacing, FontSize, FontWeight, BorderRadius } from '@/constants';
 import { useCaptureStore, useScansStore, useUserStore } from '@/store';
-import { validateImage, runInference } from '@/services';
+import { validateImage, runInference, createScan } from '@/services';
 import { applyClassifications } from '@/utils/quality-rules';
 import { generateUUID } from '@/utils/uuid';
 import type { ImageValidationResult } from '@/types/inference.types';
@@ -21,6 +22,7 @@ export default function PreviewScreen() {
   const { addScan, setProcessing } = useScansStore();
   const { user } = useUserStore();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isNavigatingToResults, setIsNavigatingToResults] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
   const [validationResult, setValidationResult] = useState<ImageValidationResult | null>(null);
 
@@ -45,6 +47,7 @@ export default function PreviewScreen() {
   };
 
   const handleRetake = () => {
+    setIsNavigatingToResults(false);
     reset();
     router.back();
   };
@@ -100,13 +103,17 @@ export default function PreviewScreen() {
         inferenceTimeMs: inferenceResult.inferenceTimeMs,
       };
 
+      // Persist to SQLite so History tab (which reads from DB) stays in sync.
+      await createScan(scanResult);
       addScan(scanResult);
 
       // Reset capture state and navigate to results
+      setIsNavigatingToResults(true);
       reset();
       router.replace(`/results/${scanResult.id}`);
     } catch (error) {
       console.error('Analysis error:', error);
+      setIsNavigatingToResults(false);
       Alert.alert('Analysis Failed', 'Unable to analyze the image. Please try again.');
     } finally {
       setIsAnalyzing(false);
@@ -115,26 +122,38 @@ export default function PreviewScreen() {
   };
 
   if (!capturedImageUri) {
+    if (isAnalyzing || isNavigatingToResults) {
+      return (
+        <SafeAreaView style={styles.container}>
+          <LoadingOverlay visible={true} message="Opening results..." />
+        </SafeAreaView>
+      );
+    }
+
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <Text style={styles.errorText}>No image captured</Text>
         <Button title="Go Back" onPress={handleRetake} />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Image Preview */}
-      <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: capturedImageUri }}
-          style={styles.image}
-          resizeMode="contain"
-        />
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        style={styles.scrollArea}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Image Preview */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: capturedImageUri }}
+            style={styles.image}
+            resizeMode="contain"
+          />
+        </View>
 
-      <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
         {/* Info Card */}
         <Card variant="filled" style={styles.infoCard}>
           <View style={styles.infoRow}>
@@ -179,27 +198,27 @@ export default function PreviewScreen() {
             ))}
           </Card>
         ) : null}
+
+        {/* Actions */}
+        <View style={styles.actions}>
+          <Button
+            title="Retake"
+            variant="outline"
+            onPress={handleRetake}
+            style={styles.actionButton}
+          />
+          <Button
+            title="Analyze"
+            onPress={handleAnalyze}
+            loading={isAnalyzing}
+            disabled={isValidating}
+            style={styles.actionButton}
+          />
+        </View>
       </ScrollView>
 
-      {/* Actions */}
-      <View style={styles.actions}>
-        <Button
-          title="Retake"
-          variant="outline"
-          onPress={handleRetake}
-          style={styles.actionButton}
-        />
-        <Button
-          title="Analyze"
-          onPress={handleAnalyze}
-          loading={isAnalyzing}
-          disabled={isValidating}
-          style={styles.actionButton}
-        />
-      </View>
-
       <LoadingOverlay visible={isAnalyzing} message="Analyzing rice sample..." />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -222,6 +241,9 @@ const styles = StyleSheet.create({
   },
   scrollArea: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: Spacing.lg,
   },
   infoCard: {
     marginBottom: Spacing.md,
